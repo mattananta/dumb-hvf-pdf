@@ -2,7 +2,7 @@ from pathlib import Path
 import unittest
 
 from main import _csv_fieldnames, _eye_from_filename, _pdf_inputs, _rows_from_extraction
-from pipeline import DEFAULT_TEMPLATE_PATH, extract_pdf
+from pipeline import DEFAULT_TEMPLATE_PATH, _extract_map_values, extract_pdf
 
 
 class ExtractPdfTest(unittest.TestCase):
@@ -59,6 +59,20 @@ class ExtractPdfTest(unittest.TestCase):
         self.assertEqual(_eye_from_filename(Path("001_HVF_LE.pdf")), "LE")
         self.assertEqual(_eye_from_filename(Path("001_HVF_RE.pdf")), "RE")
         self.assertIsNone(_eye_from_filename(Path("001_HVF.pdf")))
+
+    def test_extract_map_values_preserves_left_to_right_template_order(self):
+        blocks = [(0, 0, 0, 0, "") for _ in range(15)]
+        blocks.extend(
+            [
+                (0, 0, 0, 0, "25\n26\n27\n26\n"),
+                (0, 0, 0, 0, "26\n26\n28\n28\n28\n28\n"),
+            ]
+        )
+
+        self.assertEqual(
+            _extract_map_values(blocks)[:10],
+            ["25", "26", "27", "26", "26", "26", "28", "28", "28", "28"],
+        )
 
 
 if __name__ == "__main__":

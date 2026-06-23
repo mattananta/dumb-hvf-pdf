@@ -22,7 +22,7 @@ def _match_duration(value: str) -> bool:
 
 
 def _match_on_off(value: str) -> bool:
-    return value.lower() in {"on", "off"}
+    return bool(re.fullmatch(r"^(off|-?\d+(?:\.\d+)?\s*(?:db)?)$", value))
 
 
 def _match_stimulus(value: str) -> bool:

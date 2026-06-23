@@ -74,10 +74,14 @@ def _extract_header(blocks: list[tuple[Any, ...]], labels: list[str]) -> dict[st
     return normalise_pdf_header(values, labels)
 
 
-def _extract_map_values(blocks: list[tuple[Any, ...]]) -> list[str]:
+def _extract_map_values(blocks: list[tuple[Any, ...]], eye) -> list[str]:
     values: list[str] = []
-    for block in blocks[15:39]:
-        values.extend(re.findall(r"[<>]?-?\d+", block[4])[::-1])
+    if eye == 'RE':
+        for block in blocks[15:39]:
+            values.extend(re.findall(r"[<>]?-?\d+", block[4]))
+    elif eye == 'LE':
+        for block in blocks[15:39]:
+            values.extend(re.findall(r"[<>]?-?\d+", block[4])[::-1])
     return values
 
 
@@ -161,11 +165,39 @@ def extract_pdf(
 
     result: dict[str, str] = {}
     result.update(_extract_header(blocks, template["header"]["labels"]))
-    _assign_map_values(result, _extract_map_values(blocks), template, strict)
+    _assign_map_values(result, _extract_map_values(blocks,eye), template, strict)
     _extract_ght_vfi(result, blocks, template["ght_vfi"]["labels"], strict)
 
     return {eye: result}
 
+def extract_pdf_stream(file: bytes,
+    eye: str,
+    template_path: str | Path = DEFAULT_TEMPLATE_PATH,
+    *,
+    strict: bool = False,
+) -> dict[str, dict[str, str]]:
+    
+    template = _load_template(template_path, eye)
+    if type(file) is bytes:
+        try:
+            import fitz
+        except ModuleNotFoundError as exc:
+            raise ModuleNotFoundError(
+                "PyMuPDF is required to read PDFs. Install dependencies with: "
+                "python3 -m pip install -r requirements.txt"
+            ) from exc
+        doc = fitz.open(stream=file, filetype="pdf")
+
+    if len(doc) == 0:
+        raise HVFExtractionError(f"PDF has no pages")
+    
+    blocks = doc[0].get_text_blocks()
+    result: dict[str, str] = {}
+    result.update(_extract_header(blocks, template["header"]["labels"]))
+    _assign_map_values(result, _extract_map_values(blocks,eye), template, strict)
+    _extract_ght_vfi(result, blocks, template["ght_vfi"]["labels"], strict)
+
+    return {eye: result}
 
 def extract_pdf_both_eyes(
     file: str | Path,
