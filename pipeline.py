@@ -22,6 +22,23 @@ class HVFExtractionError(RuntimeError):
     """Raised when a PDF cannot be parsed as the expected HVF export layout."""
 
 
+def _pymupdf():
+    try:
+        import pymupdf
+
+        return pymupdf
+    except ModuleNotFoundError:
+        try:
+            import fitz
+
+            return fitz
+        except ModuleNotFoundError as exc:
+            raise ModuleNotFoundError(
+                "PyMuPDF is required to read PDFs. Install dependencies with: "
+                "python3 -m pip install -r requirements.txt"
+            ) from exc
+
+
 def _load_template(template_path: str | Path, eye: str) -> dict[str, Any]:
     path = Path(template_path)
     if not path.exists():
@@ -38,14 +55,7 @@ def _load_template(template_path: str | Path, eye: str) -> dict[str, Any]:
 
 
 def _open_pdf(path: Path):
-    try:
-        import fitz
-    except ModuleNotFoundError as exc:
-        raise ModuleNotFoundError(
-            "PyMuPDF is required to read PDFs. Install dependencies with: "
-            "python3 -m pip install -r requirements.txt"
-        ) from exc
-
+    fitz = _pymupdf()
     return fitz.open(path)
 
 
@@ -74,7 +84,7 @@ def _extract_header(blocks: list[tuple[Any, ...]], labels: list[str]) -> dict[st
     return normalise_pdf_header(values, labels)
 
 
-def _extract_map_values(blocks: list[tuple[Any, ...]], eye) -> list[str]:
+def _extract_map_values(blocks: list[tuple[Any, ...]], eye: str = "RE") -> list[str]:
     values: list[str] = []
     if eye == 'RE':
         for block in blocks[15:39]:
@@ -179,13 +189,7 @@ def extract_pdf_stream(file: bytes,
     
     template = _load_template(template_path, eye)
     if type(file) is bytes:
-        try:
-            import fitz
-        except ModuleNotFoundError as exc:
-            raise ModuleNotFoundError(
-                "PyMuPDF is required to read PDFs. Install dependencies with: "
-                "python3 -m pip install -r requirements.txt"
-            ) from exc
+        fitz = _pymupdf()
         doc = fitz.open(stream=file, filetype="pdf")
 
     if len(doc) == 0:

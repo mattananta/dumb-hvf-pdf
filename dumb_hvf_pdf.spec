@@ -1,13 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from PyInstaller.utils.hooks import collect_all
+
 block_cipher = None
+
+pymupdf_datas, pymupdf_binaries, pymupdf_hiddenimports = collect_all("pymupdf")
 
 a = Analysis(
     ["main.py"],
     pathex=[],
-    binaries=[],
-    datas=[("data/templates/HVF.json", "data/templates")],
-    hiddenimports=["fitz"],
+    binaries=pymupdf_binaries,
+    datas=[("data/templates/HVF.json", "data/templates"), *pymupdf_datas],
+    hiddenimports=["pymupdf", *pymupdf_hiddenimports],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
