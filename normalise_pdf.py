@@ -21,8 +21,8 @@ def _match_duration(value: str) -> bool:
     return bool(re.fullmatch(r"\d{1,2}:\d{2}", value))
 
 
-def _match_on_off(value: str) -> bool:
-    return bool(re.fullmatch(r"^(off|-?\d+(?:\.\d+)?\s*(?:db)?)$", value))
+def _match_fovea(value: str) -> bool:
+    return bool(re.fullmatch(r"off|-?\d+(?:\.\d+)?\s*(?:db)?", value, re.IGNORECASE))
 
 
 def _match_stimulus(value: str) -> bool:
@@ -88,7 +88,7 @@ _HEADER_MATCHERS: Dict[str, Matcher] = {
     "False Negative Errors": _match_percent,
     "Test Duration": _match_duration,
     "Exam Duration": _match_duration,
-    "Fovea": _match_on_off,
+    "Fovea": _match_fovea,
     "Stimulus": _match_stimulus,
     "Background": _match_background,
     "Strategy": _match_strategy,

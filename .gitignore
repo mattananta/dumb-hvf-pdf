@@ -8,3 +8,4 @@ dist/
 *.pdf
 .pyinstaller
 *.csv
+compare_csvs.py
